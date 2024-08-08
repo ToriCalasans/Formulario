@@ -5,8 +5,8 @@ export default async function handler(req, res) {
   const { year } = req.query;
   try {
     const result = await pool.query(
-      'SELECT id, name, photo FROM professors WHERE years @> $1::int[]',
-      [[parseInt(year)]]
+      'SELECT id, name, photo FROM professors WHERE years @> $1::jsonb',
+      [JSON.stringify([parseInt(year)])]
     );
     res.status(200).json(result.rows);
   } catch (error) {

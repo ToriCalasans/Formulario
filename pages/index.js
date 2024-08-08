@@ -1,25 +1,24 @@
 // pages/index.js
-import { useState } from 'react';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
-
-const professors = {
-  6: [
-    { id: 1, name: 'Prof. A', photo: '/images/photoA.jpg' },
-    { id: 2, name: 'Prof. B', photo: '/images/photoB.jpg' },
-  ],
-  7: [
-    { id: 3, name: 'Prof. C', photo: '/images/photoC.jpg' },
-    { id: 4, name: 'Prof. D', photo: '/images/photoD.jpg' },
-  ],
-  // Adicione mais anos e professores conforme necessário
-};
+import { useState, useEffect } from 'react';
+import { Container, Row, Col, Card, Button, Form } from 'react-bootstrap';
 
 const Formulario = ({ year }) => {
+  const [professors, setProfessors] = useState([]);
   const [selections, setSelections] = useState({
     gold: '',
     silver: '',
     bronze: '',
   });
+
+  useEffect(() => {
+    const fetchProfessors = async () => {
+      const res = await fetch(`/api/professors?year=${year}`);
+      const data = await res.json();
+      setProfessors(data);
+    };
+
+    fetchProfessors();
+  }, [year]);
 
   const handleSelect = (medal, profId) => {
     setSelections((prevSelections) => ({
@@ -44,7 +43,7 @@ const Formulario = ({ year }) => {
               <Col>
                 <h2>Medalha de Ouro</h2>
                 <Row>
-                  {professors[year].map((prof) => (
+                  {professors.map((prof) => (
                     <Col key={prof.id} md={4}>
                       <Card
                         onClick={() => handleSelect('gold', prof.id)}
@@ -64,7 +63,7 @@ const Formulario = ({ year }) => {
               <Col>
                 <h2>Medalha de Prata</h2>
                 <Row>
-                  {professors[year].map((prof) => (
+                  {professors.map((prof) => (
                     <Col key={prof.id} md={4}>
                       <Card
                         onClick={() => handleSelect('silver', prof.id)}
@@ -84,7 +83,7 @@ const Formulario = ({ year }) => {
               <Col>
                 <h2>Medalha de Bronze</h2>
                 <Row>
-                  {professors[year].map((prof) => (
+                  {professors.map((prof) => (
                     <Col key={prof.id} md={4}>
                       <Card
                         onClick={() => handleSelect('bronze', prof.id)}
@@ -116,10 +115,30 @@ const Formulario = ({ year }) => {
 };
 
 const IndexPage = () => {
-  // Defina o ano desejado pelo administrador
-  const year = 6; // Exemplo: 6º ano
+  const [year, setYear] = useState(6); // Exemplo: 6º ano
 
-  return <Formulario year={year} />;
+  const handleYearChange = (event) => {
+    setYear(parseInt(event.target.value));
+  };
+
+  return (
+    <Container>
+      <Row>
+        <Col>
+          <Form.Group controlId="formYear">
+            <Form.Label>Selecione o Ano</Form.Label>
+            <Form.Control as="select" value={year} onChange={handleYearChange}>
+              <option value={6}>6º Ano</option>
+              <option value={7}>7º Ano</option>
+              <option value={8}>8º Ano</option>
+              <option value={9}>9º Ano</option>
+            </Form.Control>
+          </Form.Group>
+        </Col>
+      </Row>
+      <Formulario year={year} />
+    </Container>
+  );
 };
 
 export default IndexPage;
