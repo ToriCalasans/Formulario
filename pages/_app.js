@@ -1,9 +1,12 @@
-// pages/_app.js
-import 'bootstrap/dist/css/bootstrap.min.css';
-import '../styles/globals.css';
+import '../styles/global.css';
+import { ProfessorProvider } from '../context/ProfessorContext';
 
 function MyApp({ Component, pageProps }) {
-  return <Component {...pageProps} />;
+  return (
+    <ProfessorProvider>
+      <Component {...pageProps} />
+    </ProfessorProvider>
+  );
 }
 
 export default MyApp;

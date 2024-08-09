@@ -1,56 +1,42 @@
+import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
-const years = [6, 7, 8, 9]; // Anos disponíveis para seleção
-
 export default function Home() {
-  const [selectedYear, setSelectedYear] = useState(years[0]); // Ano selecionado
-  const [professors, setProfessors] = useState([]);
+  const router = useRouter();
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [years, setYears] = useState([]);
 
-  const fetchProfessors = async (year) => {
-    console.log('Fetching professors for year:', year);
-    let { data, error } = await supabase
-      .from('professors')
-      .select('*')
-      .contains('years', [`${year}°`]); // Ajuste para incluir o símbolo de grau
-
+  const fetchYears = async () => {
+    let { data, error } = await supabase.from('ano').select('*');
     if (error) {
-      console.error('Error fetching professors:', error);
+      console.error('Error fetching years:', error);
     } else {
-      console.log('Professors fetched:', data);
-      setProfessors(data);
+      setYears(data);
+      setSelectedYear(data[0]?.id_ano || null); // Set first year as selected by default
     }
   };
 
   useEffect(() => {
-    fetchProfessors(selectedYear);
-  }, [selectedYear]);
+    fetchYears();
+  }, []);
+
+  const handleStart = () => {
+    router.push(`/step1?year=${selectedYear}`);
+  };
 
   return (
     <div>
-      <h1>Selecione o Ano</h1>
+      <h1>Bem-vindo ao Sistema de Seleção de Professores</h1>
+      <h2>Selecione o Ano</h2>
       <select value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))}>
         {years.map((year) => (
-          <option key={year} value={year}>
-            {year}º Ano
+          <option key={year.id_ano} value={year.id_ano}>
+            {year.nome_ano}
           </option>
         ))}
       </select>
-      <div>
-        <h2>Professores do {selectedYear}º Ano</h2>
-        {professors.length === 0 ? (
-          <p>Nenhum professor encontrado.</p>
-        ) : (
-          <div>
-            {professors.map((professor) => (
-              <div key={professor.id}>
-                <img src={professor.photo} alt={professor.name} />
-                <p>{professor.name}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <button onClick={handleStart} disabled={!selectedYear}>Começar</button>
     </div>
   );
 }
