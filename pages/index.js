@@ -1,144 +1,56 @@
-// pages/index.js
 import { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form } from 'react-bootstrap';
+import { supabase } from '../lib/supabase';
 
-const Formulario = ({ year }) => {
+const years = [6, 7, 8, 9]; // Anos disponíveis para seleção
+
+export default function Home() {
+  const [selectedYear, setSelectedYear] = useState(years[0]); // Ano selecionado
   const [professors, setProfessors] = useState([]);
-  const [selections, setSelections] = useState({
-    gold: '',
-    silver: '',
-    bronze: '',
-  });
+
+  const fetchProfessors = async (year) => {
+    console.log('Fetching professors for year:', year);
+    let { data, error } = await supabase
+      .from('professors')
+      .select('*')
+      .contains('years', [`${year}°`]); // Ajuste para incluir o símbolo de grau
+
+    if (error) {
+      console.error('Error fetching professors:', error);
+    } else {
+      console.log('Professors fetched:', data);
+      setProfessors(data);
+    }
+  };
 
   useEffect(() => {
-    const fetchProfessors = async () => {
-      const res = await fetch(`/api/professors?year=${year}`);
-      const data = await res.json();
-      setProfessors(data);
-    };
-
-    fetchProfessors();
-  }, [year]);
-
-  const handleSelect = (medal, profId) => {
-    setSelections((prevSelections) => ({
-      ...prevSelections,
-      [medal]: profId,
-    }));
-  };
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    console.log(selections);
-    // Aqui você pode adicionar a lógica para enviar as seleções ao servidor
-  };
+    fetchProfessors(selectedYear);
+  }, [selectedYear]);
 
   return (
-    <Container>
-      <Row>
-        <Col>
-          <h1>Escolha seus Professores</h1>
-          <form onSubmit={handleSubmit}>
-            <Row>
-              <Col>
-                <h2>Medalha de Ouro</h2>
-                <Row>
-                  {professors.map((prof) => (
-                    <Col key={prof.id} md={4}>
-                      <Card
-                        onClick={() => handleSelect('gold', prof.id)}
-                        className={selections.gold === prof.id ? 'selected' : ''}
-                      >
-                        <Card.Img variant="top" src={prof.photo} />
-                        <Card.Body>
-                          <Card.Title>{prof.name}</Card.Title>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                  ))}
-                </Row>
-              </Col>
-            </Row>
-            <Row>
-              <Col>
-                <h2>Medalha de Prata</h2>
-                <Row>
-                  {professors.map((prof) => (
-                    <Col key={prof.id} md={4}>
-                      <Card
-                        onClick={() => handleSelect('silver', prof.id)}
-                        className={selections.silver === prof.id ? 'selected' : ''}
-                      >
-                        <Card.Img variant="top" src={prof.photo} />
-                        <Card.Body>
-                          <Card.Title>{prof.name}</Card.Title>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                  ))}
-                </Row>
-              </Col>
-            </Row>
-            <Row>
-              <Col>
-                <h2>Medalha de Bronze</h2>
-                <Row>
-                  {professors.map((prof) => (
-                    <Col key={prof.id} md={4}>
-                      <Card
-                        onClick={() => handleSelect('bronze', prof.id)}
-                        className={selections.bronze === prof.id ? 'selected' : ''}
-                      >
-                        <Card.Img variant="top" src={prof.photo} />
-                        <Card.Body>
-                          <Card.Title>{prof.name}</Card.Title>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                  ))}
-                </Row>
-              </Col>
-            </Row>
-            <Button variant="primary" type="submit">
-              Enviar
-            </Button>
-          </form>
-        </Col>
-      </Row>
-      <style jsx>{`
-        .selected {
-          border: 2px solid gold;
-        }
-      `}</style>
-    </Container>
+    <div>
+      <h1>Selecione o Ano</h1>
+      <select value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))}>
+        {years.map((year) => (
+          <option key={year} value={year}>
+            {year}º Ano
+          </option>
+        ))}
+      </select>
+      <div>
+        <h2>Professores do {selectedYear}º Ano</h2>
+        {professors.length === 0 ? (
+          <p>Nenhum professor encontrado.</p>
+        ) : (
+          <div>
+            {professors.map((professor) => (
+              <div key={professor.id}>
+                <img src={professor.photo} alt={professor.name} />
+                <p>{professor.name}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
-};
-
-const IndexPage = () => {
-  const [year, setYear] = useState(6); // Exemplo: 6º ano
-
-  const handleYearChange = (event) => {
-    setYear(parseInt(event.target.value));
-  };
-
-  return (
-    <Container>
-      <Row>
-        <Col>
-          <Form.Group controlId="formYear">
-            <Form.Label>Selecione o Ano</Form.Label>
-            <Form.Control as="select" value={year} onChange={handleYearChange}>
-              <option value={6}>6º Ano</option>
-              <option value={7}>7º Ano</option>
-              <option value={8}>8º Ano</option>
-              <option value={9}>9º Ano</option>
-            </Form.Control>
-          </Form.Group>
-        </Col>
-      </Row>
-      <Formulario year={year} />
-    </Container>
-  );
-};
-
-export default IndexPage;
+}
