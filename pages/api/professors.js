@@ -14,13 +14,13 @@ export default async function handler(req, res) {
 
     if (error) throw error;
 
-    const professores = data.map((item) => ({
+    const prof = data.map((item) => ({
       id: item.prof.id_prof,
       nome: item.prof.nome_prof,
       foto: item.prof.foto_prof,
     }));
 
-    res.status(200).json(professores);
+    res.status(200).json(prof);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -3,8 +3,8 @@ import { useProfessorContext } from '../context/ProfessorContext';
 import { supabase } from '../lib/supabase';
 
 const Result = () => {
-  const { selectedProfessores } = useProfessorContext();
-  const [professores, setProfessores] = useState({ gold: '', silver: '', bronze: '' });
+  const { selectedProfe } = useProfessorContext();
+  const [prof, setProf] = useState({ gold: '', silver: '', bronze: '' });
 
   useEffect(() => {
     const fetchProfessorName = async (professorId, medal) => {

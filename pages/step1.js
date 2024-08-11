@@ -1,49 +1,54 @@
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabase';
-import { useProfessorContext } from '../context/ProfessorContext';
 
-export default function Step1() {
-  const router = useRouter();
-  const { selectedYear, selectedProfessors, setSelectedProfessors } = useProfessorContext();
-  const [professors, setProfessors] = useState([]);
+const Step1 = () => {
+  const [years, setYears] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(null);
 
   useEffect(() => {
-    const fetchProfessors = async () => {
-      let { data, error } = await supabase
-        .from('prof')
-        .select('*')
-        .in('id_prof', supabase.from('prof_ano').select('id_prof_fk').eq('id_ano_fk', selectedYear));
-      if (error) console.error('Error fetching professors:', error);
-      else setProfessors(data);
+    const fetchYears = async () => {
+      const { data, error } = await supabase
+        .from('ano')  // Nome da tabela
+        .select('*'); // Seleciona todas as colunas
+  
+      if (error) {
+        console.error('Error fetching years:', error);
+      } else {
+        console.log('Fetched anos:', data);  // Verifique se os dados estão corretos
+        setYears(data);
+      }
     };
-    if (selectedYear) fetchProfessors();
-  }, [selectedYear]);
-
+  
+    fetchYears();
+  }, []);
+  
   const handleNext = () => {
-    router.push('/step2');
-  };
-
-  const selectProfessor = (profId) => {
-    setSelectedProfessors({ ...selectedProfessors, gold: profId });
+    // Lógica para ir para a próxima página
   };
 
   return (
     <div>
-      <h1>Selecione o Professor Ouro</h1>
-      <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-        {professors.map((prof) => (
-          <div 
-            key={prof.id_prof} 
-            style={{ border: selectedProfessors.gold === prof.id_prof ? '2px solid gold' : '1px solid gray', margin: '10px', padding: '10px', cursor: 'pointer' }}
-            onClick={() => selectProfessor(prof.id_prof)}
-          >
-            <img src={`/images/${prof.foto_prof}`} alt={prof.nome_prof} style={{ width: '100px', height: '100px' }} />
-            <p>{prof.nome_prof}</p>
-          </div>
-        ))}
-      </div>
-      <button onClick={handleNext} disabled={!selectedProfessors.gold}>Next</button>
+      <h1>Step 1: Select a Year</h1>
+      {years.length === 0 ? (
+        <p>No years available</p>
+      ) : (
+        <select
+          value={selectedYear !== null ? selectedYear : ""}
+          onChange={(e) => setSelectedYear(Number(e.target.value))}
+        >
+          <option value="" disabled>Select a year</option>
+          {years.map((ano) => (
+            <option key={ano.id_ano} value={ano.id_ano}>
+              {ano.nome_ano}º Ano
+            </option>
+          ))}
+        </select>
+      )}
+      <button onClick={handleNext} disabled={selectedYear === null}>
+        Next
+      </button>
     </div>
   );
-}
+};
+
+export default Step1;

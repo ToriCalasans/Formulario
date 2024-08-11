@@ -1,51 +1,64 @@
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import { supabase } from '../lib/supabase';
-import { useProfessorContext } from '../context/ProfessorContext';
+// pages/step3.js
 
-export default function Step3() {
-  const router = useRouter();
-  const { selectedYear, selectedProfessors, setSelectedProfessors } = useProfessorContext();
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { useRouter } from 'next/router';
+
+const Step3 = () => {
   const [professors, setProfessors] = useState([]);
+  const router = useRouter();
+  const { year, class: selectedClass } = router.query;
 
   useEffect(() => {
     const fetchProfessors = async () => {
-      let { data, error } = await supabase
-        .from('prof')
-        .select('*')
-        .in('id_prof', supabase.from('prof_ano').select('id_prof_fk').eq('id_ano_fk', selectedYear))
-        .neq('id_prof', selectedProfessors.gold)
-        .neq('id_prof', selectedProfessors.silver);
-      if (error) console.error('Error fetching professors:', error);
-      else setProfessors(data);
+      const { data, error } = await supabase
+        .from('prof_ano')
+        .select(`
+          prof (
+            id_prof,
+            nome_prof,
+            foto_prof
+          )
+        `)
+        .eq('id_ano_fk', year);
+  
+      if (error) {
+        console.error('Error fetching professors:', error);
+      } else {
+        console.log('Fetched professors:', data);  // Verifique se os dados estão corretos
+        setProfessors(data.map(d => d.prof));
+      }
     };
-    if (selectedYear) fetchProfessors();
-  }, [selectedYear, selectedProfessors.gold, selectedProfessors.silver]);
+  
+    if (year) {
+      fetchProfessors();
+    }
+  }, [year]);
+  
 
-  const handleNext = () => {
-    router.push('/result');
-  };
-
-  const selectProfessor = (profId) => {
-    setSelectedProfessors({ ...selectedProfessors, bronze: profId });
+  const handleSubmit = async () => {
+    // Implement form submission logic
   };
 
   return (
     <div>
-      <h1>Selecione o Professor Bronze</h1>
-      <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+      <h1>Step 3: Select Professors</h1>
+      <form onSubmit={handleSubmit}>
         {professors.map((prof) => (
-          <div 
-            key={prof.id_prof} 
-            style={{ border: selectedProfessors.bronze === prof.id_prof ? '2px solid bronze' : '1px solid gray', margin: '10px', padding: '10px', cursor: 'pointer' }}
-            onClick={() => selectProfessor(prof.id_prof)}
-          >
-            <img src={`/images/${prof.foto_prof}`} alt={prof.nome_prof} style={{ width: '100px', height: '100px' }} />
-            <p>{prof.nome_prof}</p>
+          <div key={prof.id_prof}>
+            <img src={`/images/${prof.foto_prof}`} alt={prof.nome_prof} />
+            <div>{prof.nome_prof}</div>
+            <input
+              type="radio"
+              name="professor"
+              value={prof.id_prof}
+            />
           </div>
         ))}
-      </div>
-      <button onClick={handleNext} disabled={!selectedProfessors.bronze}>Next</button>
+        <button type="submit">Submit</button>
+      </form>
     </div>
   );
-}
+};
+
+export default Step3;
