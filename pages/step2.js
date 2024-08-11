@@ -57,5 +57,5 @@ const Step2 = () => {
     </div>
   );
 };
-
+console.log("passei por aqui 2");
 export default Step2;

@@ -60,5 +60,5 @@ const Step3 = () => {
     </div>
   );
 };
-
+console.log("aprrei por aqui 3");
 export default Step3;

@@ -1,27 +1,15 @@
-import { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 const ProfessorContext = createContext();
 
-export const useProfessorContext = () => useContext(ProfessorContext);
-
 export const ProfessorProvider = ({ children }) => {
-  const [selectedAno, setSelectedAno] = useState(null);
-  const [selectedProfessores, setSelectedProfessores] = useState({
-    gold: null,
-    silver: null,
-    bronze: null,
-  });
+  const [selectedProfessores, setSelectedProfessores] = useState({ gold: '', silver: '', bronze: '' });
 
   return (
-    <ProfessorContext.Provider
-      value={{
-        selectedAno,
-        setSelectedAno,
-        selectedProfessores,
-        setSelectedProfessores,
-      }}
-    >
+    <ProfessorContext.Provider value={{ selectedProfessores, setSelectedProfessores }}>
       {children}
     </ProfessorContext.Provider>
   );
 };
+
+export const useProfessorContext = () => useContext(ProfessorContext);

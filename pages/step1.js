@@ -49,6 +49,5 @@ const Step1 = () => {
       </button>
     </div>
   );
-};
-
+};console.log("passei por aqui");
 export default Step1;
