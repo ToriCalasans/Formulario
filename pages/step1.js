@@ -1,53 +1,55 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { useRouter } from 'next/router';
 
 const Step1 = () => {
-  const [years, setYears] = useState([]);
-  const [selectedYear, setSelectedYear] = useState(null);
+  const [professors, setProfessors] = useState([]);
+  const router = useRouter();
+  const { year } = router.query;
 
   useEffect(() => {
-    const fetchYears = async () => {
+    const fetchProfessors = async () => {
       const { data, error } = await supabase
-        .from('ano')  // Nome da tabela
-        .select('*'); // Seleciona todas as colunas
-  
+        .from('prof_ano')
+        .select(`
+          prof (
+            id_prof,
+            nome_prof,
+            foto_prof
+          )
+        `)
+        .eq('id_ano_fk', year);  // Corrigir o nome da coluna aqui
+
       if (error) {
-        console.error('Error fetching years:', error);
+        console.error('Error fetching professors:', error);
       } else {
-        console.log('Fetched anos:', data);  // Verifique se os dados estão corretos
-        setYears(data);
+        setProfessors(data.map(d => d.prof));
       }
     };
-  
-    fetchYears();
-  }, []);
-  
-  const handleNext = () => {
-    // Lógica para ir para a próxima página
+
+    if (year) {
+      fetchProfessors();
+    }
+  }, [year]);
+
+  const handleNext = (selectedProfessor) => {
+    router.push({
+      pathname: '/step2',
+      query: { year, gold: selectedProfessor }
+    });
   };
 
   return (
     <div>
-      <h1>Step 1: Select a Year</h1>
-      {years.length === 0 ? (
-        <p>No years available</p>
-      ) : (
-        <select
-          value={selectedYear !== null ? selectedYear : ""}
-          onChange={(e) => setSelectedYear(Number(e.target.value))}
-        >
-          <option value="" disabled>Select a year</option>
-          {years.map((ano) => (
-            <option key={ano.id_ano} value={ano.id_ano}>
-              {ano.nome_ano}º Ano
-            </option>
-          ))}
-        </select>
-      )}
-      <button onClick={handleNext} disabled={selectedYear === null}>
-        Next
-      </button>
+      <h1>Select the Gold Professor</h1>
+      {professors.map((prof) => (
+        <div key={prof.id_prof} onClick={() => handleNext(prof.id_prof)}>
+          <img src={`/images/${prof.foto_prof}`} alt={prof.nome_prof} />
+          <div>{prof.nome_prof}</div>
+        </div>
+      ))}
     </div>
   );
-};console.log("passei por aqui");
+};
+
 export default Step1;

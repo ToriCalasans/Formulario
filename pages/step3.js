@@ -1,13 +1,11 @@
-// pages/step3.js
-
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useRouter } from 'next/router';
 
 const Step3 = () => {
   const [professors, setProfessors] = useState([]);
   const router = useRouter();
-  const { year, class: selectedClass } = router.query;
+  const { year, gold, silver } = router.query;
 
   useEffect(() => {
     const fetchProfessors = async () => {
@@ -20,45 +18,39 @@ const Step3 = () => {
             foto_prof
           )
         `)
-        .eq('id_ano_fk', year);
-  
+        .eq('id_ano_fk', year)  // Corrigir o nome da coluna aqui
+        .not(`id_prof_fk`, 'in', `(${gold},${silver})`);  // Corrigir o nome da coluna aqui
+
       if (error) {
         console.error('Error fetching professors:', error);
       } else {
-        console.log('Fetched professors:', data);  // Verifique se os dados estão corretos
         setProfessors(data.map(d => d.prof));
       }
     };
-  
-    if (year) {
+
+    if (year && gold && silver) {
       fetchProfessors();
     }
-  }, [year]);
-  
+  }, [year, gold, silver]);
 
-  const handleSubmit = async () => {
-    // Implement form submission logic
+  const handleSubmit = (selectedProfessor) => {
+    // Enviar dados para o banco de dados
+    // ...
+
+    router.push('/final');
   };
 
   return (
     <div>
-      <h1>Step 3: Select Professors</h1>
-      <form onSubmit={handleSubmit}>
-        {professors.map((prof) => (
-          <div key={prof.id_prof}>
-            <img src={`/images/${prof.foto_prof}`} alt={prof.nome_prof} />
-            <div>{prof.nome_prof}</div>
-            <input
-              type="radio"
-              name="professor"
-              value={prof.id_prof}
-            />
-          </div>
-        ))}
-        <button type="submit">Submit</button>
-      </form>
+      <h1>Select the Bronze Professor</h1>
+      {professors.map((prof) => (
+        <div key={prof.id_prof} onClick={() => handleSubmit(prof.id_prof)}>
+          <img src={`/images/${prof.foto_prof}`} alt={prof.nome_prof} />
+          <div>{prof.nome_prof}</div>
+        </div>
+      ))}
     </div>
   );
 };
-console.log("aprrei por aqui 3");
+
 export default Step3;
