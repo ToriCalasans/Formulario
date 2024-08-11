@@ -40,6 +40,7 @@ const Home = () => {
       </select>
     </div>
   );
+  console.log(" eu não funciono pq sou um bundão")
 };
 
 export default Home;
