@@ -1,56 +1,37 @@
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import { useProfessorContext } from '../context/ProfessorContext';
 import { supabase } from '../lib/supabase';
 
-export default function Result() {
-  const router = useRouter();
-  const [selectedProfessors, setSelectedProfessors] = useState(router.query.selectedProfessors ? JSON.parse(router.query.selectedProfessors) : {});
-  const [professors, setProfessors] = useState({});
-
-  const fetchProfessorDetails = async (profId, role) => {
-    let { data, error } = await supabase
-      .from('prof')
-      .select('*')
-      .eq('Id_prof', profId)
-      .single();
-
-    if (error) {
-      console.error(`Error fetching ${role} professor:`, error);
-    } else {
-      setProfessors((prev) => ({ ...prev, [role]: data }));
-    }
-  };
+const Result = () => {
+  const { selectedProfessores } = useProfessorContext();
+  const [professores, setProfessores] = useState({ gold: '', silver: '', bronze: '' });
 
   useEffect(() => {
-    if (selectedProfessors.gold) fetchProfessorDetails(selectedProfessors.gold, 'gold');
-    if (selectedProfessors.silver) fetchProfessorDetails(selectedProfessors.silver, 'silver');
-    if (selectedProfessors.bronze) fetchProfessorDetails(selectedProfessors.bronze, 'bronze');
-  }, [selectedProfessors]);
+    const fetchProfessorName = async (professorId, medal) => {
+      const { data, error } = await supabase
+        .from('prof')
+        .select('nome_prof')
+        .eq('id_prof', professorId)
+        .single();
+
+      if (error) throw error;
+
+      setProfessores((prev) => ({ ...prev, [medal]: data.nome_prof }));
+    };
+
+    if (selectedProfessores.gold) fetchProfessorName(selectedProfessores.gold, 'gold');
+    if (selectedProfessores.silver) fetchProfessorName(selectedProfessores.silver, 'silver');
+    if (selectedProfessores.bronze) fetchProfessorName(selectedProfessores.bronze, 'bronze');
+  }, [selectedProfessores]);
 
   return (
     <div>
-      <h1>Professores Selecionados</h1>
-      {professors.gold && (
-        <div>
-          <h2>Ouro</h2>
-          <img src={`/images/${professors.gold.foto_prof}`} alt={professors.gold.nome_prof} style={{ width: '100px', height: '100px' }} />
-          <p>{professors.gold.nome_prof}</p>
-        </div>
-      )}
-      {professors.silver && (
-        <div>
-          <h2>Prata</h2>
-          <img src={`/images/${professors.silver.foto_prof}`} alt={professors.silver.nome_prof} style={{ width: '100px', height: '100px' }} />
-          <p>{professors.silver.nome_prof}</p>
-        </div>
-      )}
-      {professors.bronze && (
-        <div>
-          <h2>Bronze</h2>
-          <img src={`/images/${professors.bronze.foto_prof}`} alt={professors.bronze.nome_prof} style={{ width: '100px', height: '100px' }} />
-          <p>{professors.bronze.nome_prof}</p>
-        </div>
-      )}
+      <h1>Resultados</h1>
+      <p>Ouro: {professores.gold}</p>
+      <p>Prata: {professores.silver}</p>
+      <p>Bronze: {professores.bronze}</p>
     </div>
   );
-}
+};
+
+export default Result;

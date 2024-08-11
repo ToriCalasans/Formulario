@@ -1,19 +1,27 @@
-// pages/api/professors.js
 import { supabase } from '../../lib/supabase';
 
 export default async function handler(req, res) {
-  const { year } = req.query;
+  const { anoId } = req.query;
+
   try {
     const { data, error } = await supabase
-      .from('professors')
-      .select('id, name, photo')
-      .contains('years', [parseInt(year)]);
+      .from('prof_ano')
+      .select(`
+        id_prof_ano,
+        prof (id_prof, nome_prof, foto_prof)
+      `)
+      .eq('id_ano_fk', anoId);
 
     if (error) throw error;
 
-    res.status(200).json(data);
+    const professores = data.map((item) => ({
+      id: item.prof.id_prof,
+      nome: item.prof.nome_prof,
+      foto: item.prof.foto_prof,
+    }));
+
+    res.status(200).json(professores);
   } catch (error) {
-    console.error('Error fetching professors:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: error.message });
   }
 }

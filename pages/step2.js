@@ -1,55 +1,50 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabase';
+import { useProfessorContext } from '../context/ProfessorContext';
 
 export default function Step2() {
   const router = useRouter();
-  const selectedProfessors = router.query.selectedProfessors ? JSON.parse(router.query.selectedProfessors) : {};
-  const [selectedSilver, setSelectedSilver] = useState(null);
+  const { selectedYear, selectedProfessors, setSelectedProfessors } = useProfessorContext();
   const [professors, setProfessors] = useState([]);
 
-  const fetchProfessors = async () => {
-    let { data, error } = await supabase
-      .from('prof_ano')
-      .select('professors:prof (*)')
-      .eq('id_ano_fk', selectedProfessors.year)
-      .neq('id_prof_fk', selectedProfessors.gold);
-
-    if (error) {
-      console.error('Error fetching professors:', error);
-    } else {
-      setProfessors(data.map((pa) => pa.professors));
-    }
-  };
-
   useEffect(() => {
-    fetchProfessors();
-  }, []);
+    const fetchProfessors = async () => {
+      let { data, error } = await supabase
+        .from('prof')
+        .select('*')
+        .in('id_prof', supabase.from('prof_ano').select('id_prof_fk').eq('id_ano_fk', selectedYear))
+        .neq('id_prof', selectedProfessors.gold);
+      if (error) console.error('Error fetching professors:', error);
+      else setProfessors(data);
+    };
+    if (selectedYear) fetchProfessors();
+  }, [selectedYear, selectedProfessors.gold]);
 
   const handleNext = () => {
-    selectedProfessors.silver = selectedSilver;
-    router.push({
-      pathname: '/step3',
-      query: { selectedProfessors: JSON.stringify(selectedProfessors) }
-    });
+    router.push('/step3');
+  };
+
+  const selectProfessor = (profId) => {
+    setSelectedProfessors({ ...selectedProfessors, silver: profId });
   };
 
   return (
     <div>
       <h1>Selecione o Professor Prata</h1>
       <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-        {professors.map((professor) => (
+        {professors.map((prof) => (
           <div 
-            key={professor.Id_prof} 
-            style={{ border: selectedSilver === professor.Id_prof ? '2px solid silver' : '1px solid gray', margin: '10px', padding: '10px', cursor: 'pointer' }}
-            onClick={() => setSelectedSilver(professor.Id_prof)}
+            key={prof.id_prof} 
+            style={{ border: selectedProfessors.silver === prof.id_prof ? '2px solid silver' : '1px solid gray', margin: '10px', padding: '10px', cursor: 'pointer' }}
+            onClick={() => selectProfessor(prof.id_prof)}
           >
-            <img src={`/images/${professor.foto_prof}`} alt={professor.nome_prof} style={{ width: '100px', height: '100px' }} />
-            <p>{professor.nome_prof}</p>
+            <img src={`/images/${prof.foto_prof}`} alt={prof.nome_prof} style={{ width: '100px', height: '100px' }} />
+            <p>{prof.nome_prof}</p>
           </div>
         ))}
       </div>
-      <button onClick={handleNext} disabled={!selectedSilver}>Next</button>
+      <button onClick={handleNext} disabled={!selectedProfessors.silver}>Next</button>
     </div>
   );
 }
